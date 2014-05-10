@@ -1,0 +1,8 @@
+{
+	"exhentai.org":[".ptb td a",".gdtm a","#img"],
+	"yande.re":[".pagination a",".thumb","#image"],
+	"konachan.com":[".pagination a",".thumb","#image"],
+	"danbooru.donmai.us":[".paginator a","#posts article a","#image"],
+	"img4.gelbooru.com":[".pagination a",".thumb a","#image"],
+	"anime-girls.ru":[".page a",".content a","#theImage a"]
+}
