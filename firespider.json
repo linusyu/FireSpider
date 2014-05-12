@@ -5,6 +5,6 @@
 	"danbooru.donmai.us":[".paginator a","#posts article a","#image"],
 	"img4.gelbooru.com":[".pagination a",".thumb a","#image"],
 	"anime-girls.ru":[".page a",".content a","#theImage a"],
-	"rule34.xxx":[".pagination a",".content a","#image"]
+	"rule34.xxx":[".pagination a",".content a","#image"],
         "Chan.sankakucomplex.com":[".pagination a",".thumb a","#image-link"]
 }
