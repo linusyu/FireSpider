@@ -1,7 +1,7 @@
 /*FireSpider*/
 ;(function(config) {
+
 	"use strict";
-	
 	if(window.fireSpider) return;
 	const importModule = Components.utils.import;
 	importModule("resource://gre/modules/Task.jsm");
@@ -10,18 +10,27 @@
 	importModule("resource://gre/modules/Downloads.jsm");
 	importModule( 'resource://services-common/observers.js');
 	
-	var file = Components.classes['@mozilla.org/file/directory_service;1']
+	var configFile = Components.classes['@mozilla.org/file/directory_service;1']
 				.getService(Components.interfaces.nsIProperties)
 				.get('ProfD', Components.interfaces.nsIFile);
-	file.appendRelativePath('firespider');
-	file.append('firespider.json');
+	configFile.appendRelativePath('firespider');
+	configFile.append('firespider.json');
+	
+	var selfScript = Components.classes['@mozilla.org/file/directory_service;1']
+				.getService(Components.interfaces.nsIProperties)
+				.get('UChrm', Components.interfaces.nsIFile);
+	selfScript.append('FireSpider.uc.js');
 			
 	window.fireSpider = {
+		version: "0.2",
 		protocol: "",
 		host: "",
 		href: "",
 		URI: "",
 		single:0,
+		scriptURL:"https://raw.githubusercontent.com/linusyu/FireSpider/master/FireSpider.uc.js",
+		configURL:"https://raw.githubusercontent.com/linusyu/FireSpider/master/firespider.json",
+		versionURL:"https://raw.githubusercontent.com/linusyu/FireSpider/master/version.json",
 		icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYxIDY0LjE0MDk0OSwgMjAxMC8xMi8wNy0xMDo1NzowMSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNS4xIFdpbmRvd3MiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6MzUxNDJDNkNEODNCMTFFM0FEREZEMDY3ODExOUIwMDIiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6MzUxNDJDNkREODNCMTFFM0FEREZEMDY3ODExOUIwMDIiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDozNTE0MkM2QUQ4M0IxMUUzQURERkQwNjc4MTE5QjAwMiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDozNTE0MkM2QkQ4M0IxMUUzQURERkQwNjc4MTE5QjAwMiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PhZkhEEAAAPASURBVHjaTJTfb5NVGMc/zznnbdlaRle3MQaMsmxBcCGZOkWEGAlRrvBCTQyBay+Jf4nRGC818Yo7ExOFGBMvTLjQRawyCTBEXDcGHV072q7t+77n+HQC8U3O6dtz3uc53x/Pc+S0gXkgKxReCxz/GX5JHNWVhO1nt6N4NOWN1cD6P16ujpowNQG1tcAjKzx7TH/qGjLW886GN3ORl2p/sasfhQBJQs1mWB+GD2suzNyLKPYiPhBhlP89JuvZG3l2nMxwqsBA50VylHpZerrZ1HHbw9cpC3cNN+YTOTuZsmhiMro1I7r3dJi3kPM1T5eua2wSN5bp8K2mGfBsA08t9GK2Ogk/xRKkHtjX8zwqCa0JJfR0uBbswzG+kCS/imOkmeJ2CYnS2xkHgk1pZg3GBbLVIKub+t/h7pvUr3j8M2r2EDJS8tErfxj/1eFU3tPcjGqAMWEk72XGGdIiuIkgEmFvP4+bjGG6Cjd7SLuFZVPB23cZuz6DP/ogSDm16Q9D4s+1gkR3AvdKEi4Whbl1L3W37YkZTvFvLrmkvBT8n30kf2mSRQJ2VqdF4txu4pPjwTxeDuFaCXtsCF8aET4aC5waMrw0FNxxpXLgFuE31agyix3KIfV1TEgVlfUSU4fVA9j5HJzPE51QNkcEmQqoathRFzJ1g32wiV8r4MeHye5XMC9HcPARLLcJbbtPoalk6S7Nmcc/lyITLTW0QSh77JiKvl8NudbEX9OghS3MSg9zW5MuRcjbCel0C3PdvqDijiAnJrEXmsiSU7g1kksJcrhAdC4hRA4zHRPm7mB+VPTf7CF5v0k0vkLyRQ671xN6cgFXnMB+XsF/nMftEcLDvYQbFlPOKpq+wSowsc51oltV4jNdpDaJu/SYzpX7yCcDmCNGS+VYTTVqkt7MEM7chat6WqGBjbtPuqjfdpEWcx6xekDpITRWCV8O4k4/xsxWMBV7EDmmrXC5iJ3MYg4p7ysJiSbxo1ovr+uvYlHj1d0GsqBrn4HvtJFbecxupd97SLJoNuDvLfxN/quR2g4Nuw+tDcL3HX1vaCLVjoqiqpCWV0k3Ov0CJI6rhO902e0nKjrVZXkXIVWK2SrpmoqKwmZQNVLLL+Ywr7ZI25uE3/Wgy4qKgkZn1CTVrasHDiiTQWeJ1oTUdAjdLe3PRNXYqUhiZF0t/lSFLKp+3S6mtePJvaOGaJp+M9mNFr6s5VG3U5hErx2tTjZjDdLqbWjDN41+rnrppWK29EqJk+1g2NK1fkJFoW8St/F9qt1/BRgAq9C1IFpzSmgAAAAASUVORK5CYII=",
 	
 		init: function() {
@@ -41,21 +50,25 @@
 			<menuitem label="打开下载文件夹" oncommand="fireSpider.command.openFolder()"></menuitem>\
 			<menuseparator></menuseparator>\
 			<menuitem label="规则配置" oncommand="fireSpider.configWindow()"></menuitem>\
+			<menuitem id="fp-check" label="检查更新" oncommand="fireSpider.updateWindow()"></menuitem>\
 			</menupopup>';
 			Observers.add('configChanged', fireSpider.observer);
 			
 			/*检测配置文件*/
 			
-			if (!file.exists()) {
-				file.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 438);
-				if (file.path.substr(2, 1) == '\\') {  					//for Windows
-					writeFile(file.path, JSON.stringify(config), 1);
+			if (!configFile.exists()) {
+				configFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 438);
+				if (configFile.path.substr(2, 1) == '\\') {  					//for Windows
+					writeFile(configFile.path, JSON.stringify(config), 1);
 				}
 				console.log('The configuration file does not exist, created successfully.');
 			} 
 			else {
-				this.readConfig(file);
-			}	
+				this.readConfig(configFile);
+			}
+			if(!selfScript.exists()) {
+				document.querySelector("#fp-check").style.display = "none";
+			}
 		},
 		
 		command: {
@@ -104,7 +117,7 @@
 											.createInstance(Components.interfaces.nsIFilePicker);
 				filePicker.init(window, "请选择要保存图片的文件夹", filePicker.modeGetFolder);
 				if (!filePicker.show()) {
-					this.URI = filePicker.file.path;
+					this.URI = filePicker.configFile.path;
 					this.protocol = window.getBrowser().selectedBrowser.contentDocument.location.protocol;
 					this.single = s;
 					this.entrance();
@@ -186,8 +199,7 @@
 			.getService(Components.interfaces.nsIProperties) \
 			.get("ProfD", Components.interfaces.nsIFile);\
 			file.appendRelativePath("FireSpider");\
-			var importModule = Components.utils.import;\
-			importModule("resource://gre/modules/NetUtil.jsm");\
+			Components.utils.import("resource://gre/modules/NetUtil.jsm");\
             var editor;\
 			window.addEventListener("load", function load(event){\
 				window.removeEventListener("load", load, false);  \
@@ -203,7 +215,7 @@
 					Observers.notify("configChanged");\
 					window.close();}}\
 			function subscribe(){ var subs = document.querySelector("#msg");subs.label="正在下载";subs.style.listStyleImage=\' url("chrome://browser/skin/tabbrowser/loading.png")\';\
-				NetUtil.asyncFetch("https://raw.githubusercontent.com/linusyu/FireSpider/master/firespider.json", function(inputStream) {\
+				NetUtil.asyncFetch("'+fireSpider.configURL+'", function(inputStream) {\
                 var data = NetUtil.readInputStreamToString(inputStream, inputStream.available());\
 				if (data === "Not Found") {alert("网络错误!");}\
                 else{editor.contentDocument.execCommand("selectAll");editor.contentDocument.execCommand("insertText", false, data);\
@@ -222,7 +234,7 @@
 			}</script>\
 			<hbox><description style="padding:8px;" value="规则编写：规则为 JSON 格式，属性名为网站的根域，属性值为要采集的 CSS 选择器。"/></hbox>\
 			<editor id="fsEditor" style="margin:10px 8px;" editortype="text" flex="1" type="content-primary"/>\
-            <hbox><button id="subs" label="订阅规则" oncommand="subscribe()"/><label style="font: normal 15px/30px Arial;">https://raw.githubusercontent.com/linusyu/FireSpider/master/firespider.json</label></hbox>\
+            <hbox><button id="subs" label="订阅规则" oncommand="subscribe()"/><label style="font: normal 15px/30px Arial;">'+fireSpider.configURL+'</label></hbox>\
 			<hbox><toolbarbutton id="msg"></toolbarbutton></hbox>\
 			<hbox><button label="保存" style="margin-left:420px;" oncommand="saveIni()"/><button label="取消" oncommand="window.close()"/></hbox>\
 			<separator/></window>';
@@ -230,8 +242,54 @@
 			window.open(dataURI, '', 'centerscreen,chrome');	
 		},
 		
+		updateWindow: function() {
+			let xulCode = '<?xml version="1.0"?>\
+			<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>\
+			<window id="donothing" style="padding:20px;" width="300" height="150" title="FireSpider"\
+			xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" buttons="null"><script>\
+			Components.utils.import("resource://gre/modules/NetUtil.jsm");\
+			Components.utils.import("resource://gre/modules/Task.jsm");\
+			Components.utils.import("resource://gre/modules/osfile.jsm");\
+			Components.utils.import("resource://gre/modules/Downloads.jsm");\
+			var subs;\
+			window.addEventListener("load", function load(event){\
+				window.removeEventListener("load", load, false);  \
+				subs = document.querySelector("#msg");subs.label="正在检查新版本……";subs.style.listStyleImage=\' url("chrome://browser/skin/tabbrowser/loading.png")\';\
+				NetUtil.asyncFetch("'+fireSpider.versionURL+'", function(inputStream) {\
+                var data = NetUtil.readInputStreamToString(inputStream, inputStream.available());\
+				if (data === "Not Found") {alert("网络错误!");}\
+                else{var v = document.querySelector("#version").className;\
+					data = JSON.parse(data);\
+					if(data.version == v){subs.style.listStyleImage="";subs.label="已是最新版。";}\
+					else{subs.style.listStyleImage="";subs.label="发现新版本 "+data.version;document.querySelector("#update").style.display="block";}}\
+				});},false);\
+				function update(){\
+					var selfScript = Components.classes["@mozilla.org/file/directory_service;1"]\
+					.getService(Components.interfaces.nsIProperties)\
+					.get("UChrm", Components.interfaces.nsIFile);\
+					subs.label="正在下载更新……";subs.style.listStyleImage=\' url("chrome://browser/skin/tabbrowser/loading.png")\';\
+					Task.spawn(function () {\
+						var url ="'+fireSpider.scriptURL+'";\
+						yield Downloads.fetch(url,OS.Path.join(selfScript.path,"FireSpider.uc.js"));\
+						subs.style.listStyleImage ="";\
+						subs.label="更新成功，重启浏览器生效";\
+						document.querySelector("#update").style.display="none";\
+						document.querySelector("#restart").style.display="block";\
+					}).then(null, Components.utils.reportError);\
+				}\
+				function restart(){window.close();Application.restart();}\
+			</script>\
+			<hbox><description id="version" class="'+fireSpider.version+'" value="FireSpider '+fireSpider.version+'"></description></hbox>\
+			<hbox><toolbarbutton id="msg"></toolbarbutton></hbox>\
+			<hbox style="padding-left:90px;"><button id="update" oncommand="update()" style="display:none;" label="下载更新"></button>\
+			<button id="restart" oncommand="restart()" style="display:none;" label="重启浏览器"></button></hbox>\
+			</window>'
+			var dataURI = "data:application/vnd.mozilla.xul+xml," + encodeURIComponent(xulCode);
+			let dialog = openDialog(dataURI,'','centerscreen,chrome');
+		},
+		
 		observer: function() {
-			fireSpider.readConfig(file);
+			fireSpider.readConfig(configFile);
 		},
 		
 		websiteList: function() {
@@ -251,7 +309,7 @@
 		var alertsService = Components.classes["@mozilla.org/alerts-service;1"]
 							.getService(Components.interfaces.nsIAlertsService);
 		try {
-			return alertsService.showAlertNotification("chrome://mozapps/skin/downloads/downloadIcon.png", 
+			return alertsService.showAlertNotification(fireSpider.icon, 
 											  title, text,false, "", null, "");
 		} catch (e) {
 			return alert(title+":"+text);
