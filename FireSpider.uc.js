@@ -277,7 +277,10 @@
 						document.querySelector("#restart").style.display="block";\
 					}).then(null, Components.utils.reportError);\
 				}\
-				function restart(){window.close();Application.restart();}\
+				function restart(){var xulRuntime = Components.classes["@mozilla.org/xre/app-info;1"]\
+                 		.getService(Components.interfaces.nsIXULRuntime);\
+				xulRuntime.invalidateCachesOnRestart();\
+				window.close();Application.restart();}\
 			</script>\
 			<hbox><description id="version" class="'+fireSpider.version+'" value="FireSpider '+fireSpider.version+'"></description></hbox>\
 			<hbox><toolbarbutton id="msg"></toolbarbutton></hbox>\
