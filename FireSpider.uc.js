@@ -278,7 +278,7 @@
 					}).then(null, Components.utils.reportError);\
 				}\
 				function restart(){var xulRuntime = Components.classes["@mozilla.org/xre/app-info;1"]\
-                 		.getService(Components.interfaces.nsIXULRuntime);\
+                 .getService(Components.interfaces.nsIXULRuntime);\
 				xulRuntime.invalidateCachesOnRestart();\
 				window.close();Application.restart();}\
 			</script>\
