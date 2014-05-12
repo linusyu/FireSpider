@@ -117,7 +117,7 @@
 											.createInstance(Components.interfaces.nsIFilePicker);
 				filePicker.init(window, "请选择要保存图片的文件夹", filePicker.modeGetFolder);
 				if (!filePicker.show()) {
-					this.URI = filePicker.configFile.path;
+					this.URI = filePicker.file.path;
 					this.protocol = window.getBrowser().selectedBrowser.contentDocument.location.protocol;
 					this.single = s;
 					this.entrance();
