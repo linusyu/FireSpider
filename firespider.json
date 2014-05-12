@@ -8,5 +8,6 @@
 	"rule34.xxx":[".pagination a",".content a","#image"],
         "Chan.sankakucomplex.com":[".pagination a",".thumb a","#image-link"],
         "e-shuushuu.net":[".pagination a",".thumb_image"],
-        "omom.com":[".pageFen a",".pictrueWrap a","#image_show_tag"] 
+        "omom.com":[".pageFen a",".pictrueWrap a","#image_show_tag"],
+        "www.topit.me":[".pages a","#content a","#item-tip"]
 }
