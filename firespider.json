@@ -9,6 +9,7 @@
         "Chan.sankakucomplex.com":[".pagination a",".thumb a","#image-link"],
         "e-shuushuu.net":[".pagination a",".thumb_image"],
         "safebooru.org":[".pagination a",".thumb a","#image"],
+        "www.listofimages.com":[".wp-pagenavi a","#content a","#Postcontent > a:nth-child(3)"],
         "omom.com":[".pageFen a",".pictrueWrap a","#image_show_tag"],
         "www.topit.me":[".pages a","#content a","#item-tip"],
         "www.6188.com":[".page a","#big-pic a","body > img:nth-child(1)"]
