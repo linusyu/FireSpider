@@ -2,27 +2,32 @@
 ;(function(config) {
 
 	"use strict";
-	if(window.fireSpider) return;
-	const importModule = Components.utils.import;
-	importModule("resource://gre/modules/Task.jsm");
-	importModule("resource://gre/modules/osfile.jsm");
-	importModule("resource://gre/modules/NetUtil.jsm");
-	importModule("resource://gre/modules/Downloads.jsm");
-	importModule( 'resource://services-common/observers.js');
 	
-	var configFile = Components.classes['@mozilla.org/file/directory_service;1']
-				.getService(Components.interfaces.nsIProperties)
-				.get('ProfD', Components.interfaces.nsIFile);
+	if(window.fireSpider) return;
+	
+	const Cu = Components.utils;
+	const Cc = Components.classes;
+	const Ci = Components.interfaces;
+	
+	Cu.import("resource://gre/modules/Task.jsm");
+	Cu.import("resource://gre/modules/osfile.jsm");
+	Cu.import("resource://gre/modules/NetUtil.jsm");
+	Cu.import("resource://gre/modules/Downloads.jsm");
+	Cu.import( 'resource://services-common/observers.js');
+	
+	var configFile = Cc['@mozilla.org/file/directory_service;1']
+				.getService(Ci.nsIProperties)
+				.get('ProfD', Ci.nsIFile);
 	configFile.appendRelativePath('firespider');
 	configFile.append('firespider.json');
 	
-	var selfScript = Components.classes['@mozilla.org/file/directory_service;1']
-				.getService(Components.interfaces.nsIProperties)
-				.get('UChrm', Components.interfaces.nsIFile);
+	var selfScript = Cc['@mozilla.org/file/directory_service;1']
+				.getService(Ci.nsIProperties)
+				.get('UChrm', Ci.nsIFile);
 	selfScript.append('FireSpider.uc.js');
 			
 	window.fireSpider = {
-		version: "0.2",
+		version: "0.2.1",
 		protocol: "",
 		host: "",
 		href: "",
@@ -58,10 +63,8 @@
 			/*检测配置文件*/
 			
 			if (!configFile.exists()) {
-				configFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 438);
-				if (configFile.path.substr(2, 1) == '\\') {  					//for Windows
-					writeFile(configFile.path, JSON.stringify(config), 1);
-				}
+				configFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 438);
+				writeFile(configFile.path, JSON.stringify(config), 1);
 				console.log('The configuration file does not exist, created successfully.');
 			} 
 			else {
@@ -114,8 +117,8 @@
 				return alerts("FireSpider 下载失败","当前网站无下载规则");
 			}
 			else {
-				let filePicker = Components.classes["@mozilla.org/filepicker;1"]
-											.createInstance(Components.interfaces.nsIFilePicker);
+				let filePicker = Cc["@mozilla.org/filepicker;1"]
+											.createInstance(Ci.nsIFilePicker);
 				filePicker.init(window, "请选择要保存图片的文件夹", filePicker.modeGetFolder);
 				if (!filePicker.show()) {
 					this.URI = filePicker.file.path;
@@ -147,8 +150,8 @@
 		},
 
 		spiders: function(url,selectorIterator,index) {
-		   let req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
-								.createInstance(Components.interfaces.nsIXMLHttpRequest);
+		   let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+								.createInstance(Ci.nsIXMLHttpRequest);
 		   req.onprogress = this.onProgress;
 		   req.onload = function(e) {fireSpider.parseHTML(e,selectorIterator,index,url)};
 		   req.onerror = this.onError;
@@ -188,28 +191,36 @@
   			Task.spawn(function* () {
 				yield Downloads.fetch(imgURL,OS.Path.join(fireSpider.URI,getImgName(imgURL)));
 				console.log(imgName+" has been downloaded!");
-			}).then(null, Components.utils.reportError);
+			}).then(null, Cu.reportError);
 //			console.log(imgURL);
 		},
 		
 		configWindow: function() {
 			let xulCode = '<?xml version="1.0"?><?xml-stylesheet href="chrome://global/skin/" type="text/css"?>\
-			<window id="Fire" title="firespider规则" width="600" height="600" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">\
-			<script>Components.utils.import("resource://services-common/observers.js");\
-			var file = Components.classes["@mozilla.org/file/directory_service;1"]\
-			.getService(Components.interfaces.nsIProperties) \
-			.get("ProfD", Components.interfaces.nsIFile);\
-			file.appendRelativePath("FireSpider");\
-			Components.utils.import("resource://gre/modules/NetUtil.jsm");\
+			<window id="Fire" title="firespider规则" width="650" height="600" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">\
+			<script>const Cu = Components.utils;const Cc = Components.classes;const Ci = Components.interfaces;\
+			Cu.import("resource://services-common/observers.js");\
+			Cu.import("resource://gre/modules/NetUtil.jsm");\
+			var file = Cc["@mozilla.org/file/directory_service;1"]\
+			.getService(Ci.nsIProperties) \
+			.get("ProfD", Ci.nsIFile);\
+			file.appendRelativePath("firespider");\
             var editor;\
 			window.addEventListener("load", function load(event){\
-				window.removeEventListener("load", load, false);  \
 				var URI = "file:///"+file.path+"/firespider.json";\
-                editor =document.querySelector("#fsEditor");\
-				editor.setAttribute("src",URI);\
-				setTimeout(function(){editor.contentWindow.focus();},100);},false);\
+				editor = document.querySelector("#fpeditor").contentWindow;\
+				editor.Scratchpad.hideMenu();\
+				var toolbar=editor.document.querySelector("#sp-toolbar");\
+				if(toolbar){toolbar.style.display = "none";}\
+				setTimeout(function(){\
+					NetUtil.asyncFetch(URI, function(inputStream) {\
+					var data = NetUtil.readInputStreamToString(inputStream, inputStream.available());\
+					if (data === "Not Found") {alert("网络错误!");}\
+					else{editor.Scratchpad.setText(data);}})\
+				},250);\
+			},false);\
 			function saveIni(){\
-				var content = editor.getEditor(editor.contentWindow).document.body.textContent;\
+				var content = editor.Scratchpad.getText();\
 				try{JSON.parse(content)}catch(e){alert("规则格式错误，请修改为标准 JSON 格式！");return;}\
 				if (file.path.substr(2,1)=="\\\\"){ \
 					writeFile(file.path+"\\\\firespider.json",content,1);\
@@ -219,39 +230,40 @@
 				NetUtil.asyncFetch("'+fireSpider.configURL+'", function(inputStream) {\
                 var data = NetUtil.readInputStreamToString(inputStream, inputStream.available());\
 				if (data === "Not Found") {alert("网络错误!");}\
-                else{editor.contentDocument.execCommand("selectAll");editor.contentDocument.execCommand("insertText", false, data);\
-                      subs.style.listStyleImage="";subs.label="";}\
+                else{editor.Scratchpad.setText(data);\
+					subs.style.listStyleImage="";subs.label="";}\
 				});}	\
 			function writeFile(filepath, data, override){\
 				data = parseUtf8(data);\
-				try {let outputFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);\
+				try {let outputFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);\
 				outputFile.initWithPath(filepath);\
-				let foStream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);\
+				let foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);\
 				let val = override ? 32 : 16;foStream.init(outputFile, 2 | 8 | val, 438, 0);\
 				foStream.write(data, data.length);foStream.close();} catch (e) {alert("error:" + e);}}\
 			function parseUtf8(str) {\
-				var converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Components.interfaces.nsIScriptableUnicodeConverter);\
+				var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);\
 				converter.charset = "UTF-8";return converter.ConvertFromUnicode(str);\
 			}</script>\
 			<hbox><description style="padding:8px;" value="规则编写：规则为 JSON 格式，属性名为网站的根域，属性值为要采集的 CSS 选择器。"/></hbox>\
-			<editor id="fsEditor" style="margin:10px 8px;" editortype="text" flex="1" type="content-primary"/>\
+			<iframe id="fpeditor" src="chrome://browser/content/devtools/scratchpad.xul" style="margin:10px 8px;" flex="1" type="content-primary"/>\
             <hbox><button id="subs" label="订阅规则" oncommand="subscribe()"/><label style="font: normal 15px/30px Arial;">'+fireSpider.configURL+'</label></hbox>\
 			<hbox><toolbarbutton id="msg"></toolbarbutton></hbox>\
 			<hbox><button label="保存" style="margin-left:420px;" oncommand="saveIni()"/><button label="取消" oncommand="window.close()"/></hbox>\
 			<separator/></window>';
 			var dataURI = "data:application/vnd.mozilla.xul+xml," + encodeURIComponent(xulCode);
-			window.open(dataURI, '', 'centerscreen,chrome');	
+			window.open(dataURI, '', 'centerscreen,chrome');
 		},
-		
+
 		updateWindow: function() {
 			let xulCode = '<?xml version="1.0"?>\
 			<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>\
 			<window id="donothing" style="padding:20px;" width="300" height="150" title="FireSpider"\
-			xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" buttons="null"><script>\
-			Components.utils.import("resource://gre/modules/NetUtil.jsm");\
-			Components.utils.import("resource://gre/modules/Task.jsm");\
-			Components.utils.import("resource://gre/modules/osfile.jsm");\
-			Components.utils.import("resource://gre/modules/Downloads.jsm");\
+			xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" buttons="null">\
+			<script>const Cu = Components.utils;const Cc = Components.classes;const Ci = Components.interfaces;\
+			Cu.import("resource://gre/modules/NetUtil.jsm");\
+			Cu.import("resource://gre/modules/Task.jsm");\
+			Cu.import("resource://gre/modules/osfile.jsm");\
+			Cu.import("resource://gre/modules/Downloads.jsm");\
 			var subs;\
 			window.addEventListener("load", function load(event){\
 				window.removeEventListener("load", load, false);  \
@@ -265,9 +277,9 @@
 					else{subs.style.listStyleImage="";subs.label="发现新版本 "+data.version;document.querySelector("#update").style.display="block";}}\
 				});},false);\
 				function update(){\
-					var selfScript = Components.classes["@mozilla.org/file/directory_service;1"]\
-					.getService(Components.interfaces.nsIProperties)\
-					.get("UChrm", Components.interfaces.nsIFile);\
+					var selfScript = Cc["@mozilla.org/file/directory_service;1"]\
+					.getService(Ci.nsIProperties)\
+					.get("UChrm", Ci.nsIFile);\
 					subs.label="正在下载更新……";subs.style.listStyleImage=\' url("chrome://browser/skin/tabbrowser/loading.png")\';\
 					Task.spawn(function () {\
 						var url ="'+fireSpider.scriptURL+'";\
@@ -276,10 +288,10 @@
 						subs.label="更新成功，重启浏览器生效";\
 						document.querySelector("#update").style.display="none";\
 						document.querySelector("#restart").style.display="block";\
-					}).then(null, Components.utils.reportError);\
+					}).then(null, Cu.reportError);\
 				}\
-				function restart(){var xulRuntime = Components.classes["@mozilla.org/xre/app-info;1"]\
-                 .getService(Components.interfaces.nsIXULRuntime);\
+				function restart(){var xulRuntime = Cc["@mozilla.org/xre/app-info;1"]\
+                 .getService(Ci.nsIXULRuntime);\
 				xulRuntime.invalidateCachesOnRestart();\
 				window.close();Application.restart();}\
 			</script>\
@@ -310,8 +322,8 @@
 	/*Tool function*/
 	
 	function alerts(title,text) {
-		var alertsService = Components.classes["@mozilla.org/alerts-service;1"]
-							.getService(Components.interfaces.nsIAlertsService);
+		var alertsService = Cc["@mozilla.org/alerts-service;1"]
+							.getService(Ci.nsIAlertsService);
 		try {
 			return alertsService.showAlertNotification(fireSpider.icon, 
 											  title, text,false, "", null, "");
@@ -323,11 +335,11 @@
 	function writeFile(filepath, data, override) {
 		data = parseUtf8(data);
 		try {
-			let outputFile = Components.classes['@mozilla.org/file/local;1']
-							.createInstance(Components.interfaces.nsILocalFile);
+			let outputFile = Cc['@mozilla.org/file/local;1']
+							.createInstance(Ci.nsILocalFile);
 			outputFile.initWithPath(filepath);
-			let foStream = Components.classes['@mozilla.org/network/file-output-stream;1']
-							.createInstance(Components.interfaces.nsIFileOutputStream);
+			let foStream = Cc['@mozilla.org/network/file-output-stream;1']
+							.createInstance(Ci.nsIFileOutputStream);
 			let val = override ? 32 : 16;
 			foStream.init(outputFile, 2 | 8 | val, 438, 0);
 			foStream.write(data, data.length);
@@ -338,8 +350,8 @@
 	}
 	
 	function parseUtf8(str) {
-		var converter = Components.classes['@mozilla.org/intl/scriptableunicodeconverter']
-						.createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+		var converter = Cc['@mozilla.org/intl/scriptableunicodeconverter']
+						.createInstance(Ci.nsIScriptableUnicodeConverter);
 		converter.charset = 'UTF-8';
 		return converter.ConvertFromUnicode(str);
 	}		
