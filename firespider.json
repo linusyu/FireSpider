@@ -8,7 +8,11 @@
 	"rule34.xxx":[".pagination a",".content a","#image"],
         "Chan.sankakucomplex.com":[".pagination a",".thumb a","#image-link"],
         "e-shuushuu.net":[".pagination a",".thumb_image"],
-        "omom.com":[".pageFen a",".pictrueWrap a","#image_show_tag"],
         "safebooru.org":[".pagination a",".thumb a","#image"],
-        "www.topit.me":[".pages a","#content a","#item-tip"]
+        "www.animecharactersdatabase.com":[".pager_links a","#bigtile a",".vector a","#maincontent > img:nth-child(5)"],
+        "gallery.minitokyo.net":[".pagination a","DL.wallpapers dt a","#preview a","#image img"],
+        "www.listofimages.com":[".wp-pagenavi a","#content a","#Postcontent > a:nth-child(3)"],
+        "omom.com":[".pageFen a",".pictrueWrap a","#image_show_tag"],
+        "www.topit.me":[".pages a","#content a","#item-tip"],
+        "www.6188.com":[".page a","#big-pic a","body > img:nth-child(1)"]
 }
